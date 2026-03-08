@@ -27,7 +27,8 @@ import java.util.Locale
 fun DashboardScreen(
     taskViewModel: TaskViewModel,
     onLogout: () -> Unit,
-    onNavigateToAddTask: () -> Unit
+    onNavigateToAddTask: () -> Unit,
+    onNavigateToEditTask: (Int) -> Unit
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -132,7 +133,8 @@ fun DashboardScreen(
                             TaskItem(
                                 task = task,
                                 onToggleCompletion = { taskViewModel.toggleTaskCompletion(task) },
-                                onDelete = { taskViewModel.deleteTask(task) }
+                                onDelete = { taskViewModel.deleteTask(task) },
+                                onClick = { onNavigateToEditTask(task.taskId) }
                             )
                         }
                     }
@@ -146,10 +148,13 @@ fun DashboardScreen(
 fun TaskItem(
     task: Task,
     onToggleCompletion: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onClick: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(

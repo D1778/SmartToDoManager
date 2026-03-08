@@ -50,20 +50,40 @@ class TaskViewModel(
         _currentCategory.value = category
     }
 
+    private fun getPriorityWeight(priority: String): Int {
+        return when (priority) {
+            "High" -> 3
+            "Medium" -> 2
+            "Low" -> 1
+            else -> 0
+        }
+    }
+
+    private fun sortTasks(tasks: List<Task>): List<Task> {
+        return tasks.sortedWith(
+            compareByDescending<Task> { getPriorityWeight(it.priority) }
+                .thenBy { it.dueDate }
+        )
+    }
+
     val allTasks: StateFlow<List<Task>> = taskRepository.getTasksByUserId(userId)
+        .map { sortTasks(it) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val filteredTasks: StateFlow<List<Task>> = _currentCategory.flatMapLatest { category ->
         taskRepository.getTasksByUserId(userId).map { tasks ->
-            if (category == null || category == "All") tasks
+            val filtered = if (category == null || category == "All") tasks
             else tasks.filter { it.category == category }
+            sortTasks(filtered)
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val pendingTasks: StateFlow<List<Task>> = taskRepository.getTasksByUserIdAndStatus(userId, false)
+        .map { sortTasks(it) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
         
     val completedTasks: StateFlow<List<Task>> = taskRepository.getTasksByUserIdAndStatus(userId, true)
+        .map { sortTasks(it) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun addTask(title: String, description: String, category: String, priority: String, dueDate: Long) {

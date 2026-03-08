@@ -31,4 +31,7 @@ interface TaskDao {
     
     @Query("SELECT COUNT(*) FROM tasks WHERE userId = :userId AND isCompleted = :isCompleted")
     fun getTaskCountByStatus(userId: Int, isCompleted: Boolean): Flow<Int>
+
+    @Query("SELECT * FROM tasks WHERE taskId = :taskId LIMIT 1")
+    suspend fun getTaskById(taskId: Int): Task?
 }

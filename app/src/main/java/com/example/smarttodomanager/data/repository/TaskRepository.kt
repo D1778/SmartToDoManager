@@ -21,4 +21,6 @@ class TaskRepository(private val taskDao: TaskDao) {
         
     fun getTaskCountByStatus(userId: Int, isCompleted: Boolean): Flow<Int> = 
         taskDao.getTaskCountByStatus(userId, isCompleted)
+
+    suspend fun getTaskById(taskId: Int): Task? = taskDao.getTaskById(taskId)
 }

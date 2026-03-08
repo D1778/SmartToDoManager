@@ -6,33 +6,50 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.smarttodomanager.viewmodel.TaskViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddTaskScreen(
+fun EditTaskScreen(
+    taskId: Int,
     taskViewModel: TaskViewModel,
     onNavigateBack: () -> Unit
 ) {
-    var title by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var category by remember { mutableStateOf("Personal") }
-    var priority by remember { mutableStateOf("Medium") }
+    // Collect tasks using the lifecycle-aware collector
+    val tasks by taskViewModel.allTasks.collectAsStateWithLifecycle()
     
-    val categories = listOf("Work", "Study", "Personal", "Shopping", "Health")
-    val priorities = listOf("High", "Medium", "Low")
+    // Find the specific task when the list updates
+    val task = remember(tasks, taskId) { tasks.find { it.taskId == taskId } }
+
+    if (task == null) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+        }
+        return
+    }
+
+    // Initialize state only once when the task is loaded
+    var title by remember(task.taskId) { mutableStateOf(task.title) }
+    var description by remember(task.taskId) { mutableStateOf(task.description) }
+    var category by remember(task.taskId) { mutableStateOf(task.category) }
+    var priority by remember(task.taskId) { mutableStateOf(task.priority) }
+    var selectedDate by remember(task.taskId) { mutableLongStateOf(task.dueDate) }
     
-    var selectedDate by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var showDatePicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState(initialSelectedDateMillis = selectedDate)
 
     var expandedCategory by remember { mutableStateOf(false) }
     var expandedPriority by remember { mutableStateOf(false) }
 
+    val categories = listOf("Work", "Study", "Personal", "Shopping", "Health")
+    val priorities = listOf("High", "Medium", "Low")
     val formatter = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
 
     if (showDatePicker) {
@@ -40,7 +57,7 @@ fun AddTaskScreen(
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
                 TextButton(onClick = {
-                    selectedDate = datePickerState.selectedDateMillis ?: System.currentTimeMillis()
+                    selectedDate = datePickerState.selectedDateMillis ?: selectedDate
                     showDatePicker = false
                 }) {
                     Text("OK")
@@ -59,10 +76,14 @@ fun AddTaskScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Add Task") },
+                title = { Text("Edit Task", color = MaterialTheme.colorScheme.onSurface) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.Default.ArrowBack, 
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
                     }
                 }
             )
@@ -78,7 +99,13 @@ fun AddTaskScreen(
                 value = title,
                 onValueChange = { title = it },
                 label = { Text("Title") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black,
+                    focusedLabelColor = Color.Black,
+                    unfocusedLabelColor = Color.Black.copy(alpha = 0.7f)
+                )
             )
             Spacer(modifier = Modifier.height(16.dp))
             OutlinedTextField(
@@ -86,11 +113,16 @@ fun AddTaskScreen(
                 onValueChange = { description = it },
                 label = { Text("Description") },
                 modifier = Modifier.fillMaxWidth(),
-                minLines = 3
+                minLines = 3,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black,
+                    focusedLabelColor = Color.Black,
+                    unfocusedLabelColor = Color.Black.copy(alpha = 0.7f)
+                )
             )
             Spacer(modifier = Modifier.height(16.dp))
             
-            // Date Selection (Duration)
             OutlinedTextField(
                 value = formatter.format(Date(selectedDate)),
                 onValueChange = {},
@@ -98,16 +130,21 @@ fun AddTaskScreen(
                 label = { Text("Task Date") },
                 trailingIcon = {
                     IconButton(onClick = { showDatePicker = true }) {
-                        Icon(Icons.Default.DateRange, contentDescription = "Select Date")
+                        Icon(Icons.Default.DateRange, contentDescription = "Select Date", tint = Color.Black)
                     }
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black,
+                    focusedLabelColor = Color.Black,
+                    unfocusedLabelColor = Color.Black.copy(alpha = 0.7f)
+                )
             )
             
             Spacer(modifier = Modifier.height(16.dp))
             
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                // Category Dropdown
                 Box(modifier = Modifier.weight(1f)) {
                     ExposedDropdownMenuBox(
                         expanded = expandedCategory,
@@ -119,7 +156,11 @@ fun AddTaskScreen(
                             readOnly = true,
                             label = { Text("Category") },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCategory) },
-                            modifier = Modifier.menuAnchor().fillMaxWidth()
+                            modifier = Modifier.menuAnchor().fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black
+                            )
                         )
                         ExposedDropdownMenu(
                             expanded = expandedCategory,
@@ -138,7 +179,6 @@ fun AddTaskScreen(
                     }
                 }
 
-                // Priority Dropdown
                 Box(modifier = Modifier.weight(1f)) {
                     ExposedDropdownMenuBox(
                         expanded = expandedPriority,
@@ -150,7 +190,11 @@ fun AddTaskScreen(
                             readOnly = true,
                             label = { Text("Priority") },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedPriority) },
-                            modifier = Modifier.menuAnchor().fillMaxWidth()
+                            modifier = Modifier.menuAnchor().fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Black
+                            )
                         )
                         ExposedDropdownMenu(
                             expanded = expandedPriority,
@@ -170,17 +214,25 @@ fun AddTaskScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.weight(1f))
             
             Button(
                 onClick = {
-                    taskViewModel.addTask(title, description, category, priority, selectedDate)
+                    taskViewModel.updateTask(task.copy(
+                        title = title,
+                        description = description,
+                        category = category,
+                        priority = priority,
+                        dueDate = selectedDate
+                    ))
                     onNavigateBack()
                 },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
                 enabled = title.isNotBlank()
             ) {
-                Text("Save Task")
+                Text("Save Changes", style = MaterialTheme.typography.titleMedium)
             }
         }
     }

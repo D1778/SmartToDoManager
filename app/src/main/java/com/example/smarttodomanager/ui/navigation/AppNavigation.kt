@@ -2,14 +2,17 @@ package com.example.smarttodomanager.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.smarttodomanager.data.SessionManager
 import com.example.smarttodomanager.ui.screens.LoginScreen
 import com.example.smarttodomanager.ui.screens.SignupScreen
 import com.example.smarttodomanager.ui.screens.DashboardScreen
 import com.example.smarttodomanager.ui.screens.AddTaskScreen
+import com.example.smarttodomanager.ui.screens.EditTaskScreen
 import com.example.smarttodomanager.viewmodel.AppViewModelProvider
 import com.example.smarttodomanager.viewmodel.AuthViewModel
 import com.example.smarttodomanager.viewmodel.TaskViewModel
@@ -69,6 +72,9 @@ fun AppNavigation(sessionManager: SessionManager) {
                 },
                 onNavigateToAddTask = {
                     navController.navigate(Screen.AddTask.route)
+                },
+                onNavigateToEditTask = { taskId ->
+                    navController.navigate(Screen.EditTask.createRoute(taskId))
                 }
             )
         }
@@ -76,6 +82,21 @@ fun AppNavigation(sessionManager: SessionManager) {
         composable(Screen.AddTask.route) {
             val taskViewModel: TaskViewModel = viewModel(factory = AppViewModelProvider.Factory)
             AddTaskScreen(
+                taskViewModel = taskViewModel,
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(
+            route = Screen.EditTask.route,
+            arguments = listOf(navArgument("taskId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val taskId = backStackEntry.arguments?.getInt("taskId") ?: -1
+            val taskViewModel: TaskViewModel = viewModel(factory = AppViewModelProvider.Factory)
+            EditTaskScreen(
+                taskId = taskId,
                 taskViewModel = taskViewModel,
                 onNavigateBack = {
                     navController.popBackStack()
