@@ -22,3 +22,5 @@ TECH STACK
 - Background Processing: WorkManager
 - Networking: Retrofit & Gson (for API integration)
 - Dependency Management: Gradle (Kotlin DSL)
+
+BELOW IS THE APK FILE LINK TO THE APPLICATION:
