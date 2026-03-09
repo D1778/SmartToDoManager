@@ -4,6 +4,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -40,44 +42,50 @@ fun DashboardScreen(
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet {
-                Spacer(Modifier.height(16.dp))
-                Text(
-                    "Smart To-Do Manager", 
-                    style = MaterialTheme.typography.headlineSmall, 
-                    modifier = Modifier.padding(16.dp)
-                )
-                HorizontalDivider()
-                NavigationDrawerItem(
-                    label = { Text("All Tasks") },
-                    selected = currentCategory == "All" || currentCategory == null,
-                    onClick = { 
-                        taskViewModel.setCategory("All")
-                        scope.launch { drawerState.close() }
-                    },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                )
-                val categories = listOf("Work", "Study", "Personal", "Shopping", "Health")
-                categories.forEach { category ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Spacer(Modifier.height(16.dp))
+                    Text(
+                        "Smart To-Do Manager", 
+                        style = MaterialTheme.typography.headlineSmall, 
+                        modifier = Modifier.padding(16.dp)
+                    )
+                    HorizontalDivider()
                     NavigationDrawerItem(
-                        label = { Text(category) },
-                        selected = currentCategory == category,
+                        label = { Text("All Tasks") },
+                        selected = currentCategory == "All" || currentCategory == null,
                         onClick = { 
-                            taskViewModel.setCategory(category)
+                            taskViewModel.setCategory("All")
                             scope.launch { drawerState.close() }
                         },
                         modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                     )
+                    val categories = listOf("Work", "Study", "Personal", "Shopping", "Health")
+                    categories.forEach { category ->
+                        NavigationDrawerItem(
+                            label = { Text(category) },
+                            selected = currentCategory == category,
+                            onClick = { 
+                                taskViewModel.setCategory(category)
+                                scope.launch { drawerState.close() }
+                            },
+                            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                        )
+                    }
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                    NavigationDrawerItem(
+                        label = { Text("Logout") },
+                        selected = false,
+                        onClick = {
+                            scope.launch { drawerState.close() }
+                            onLogout()
+                        },
+                        modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                    )
                 }
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                NavigationDrawerItem(
-                    label = { Text("Logout") },
-                    selected = false,
-                    onClick = {
-                        scope.launch { drawerState.close() }
-                        onLogout()
-                    },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                )
             }
         }
     ) {
